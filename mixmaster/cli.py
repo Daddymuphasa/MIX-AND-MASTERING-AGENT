@@ -65,15 +65,21 @@ def cmd_master(args: argparse.Namespace) -> int:
                            adapt=not args.no_adapt)
     print()
     print(_report.plan_report(shown_plan))
+    if args.vocal:
+        print("  + vocal clarity (de-ess + presence)")
     print()
+
+    from .presets import vocal_clarity_filter
+    vocal = vocal_clarity_filter() if args.vocal else ""
 
     results = []
     for target in targets:
         p = make_plan(a, target, base=base, tone=args.tone, adapt=not args.no_adapt)
+        eq = f"{p.eq_filter},{vocal}" if (p.eq_filter and vocal) else (p.eq_filter or vocal)
         master_wav = os.path.join(outdir, f"{stem} - MASTER ({target.name}).wav")
         print(f"Rendering {target.name} master -> {os.path.basename(master_wav)}")
         res = _mastering.render(
-            inp, master_wav, p.eq_filter, target,
+            inp, master_wav, eq, target,
             sample_rate=None, bit_depth=24, verify=True,
         )
         results.append(res)
@@ -202,6 +208,8 @@ def build_parser() -> argparse.ArgumentParser:
                     help="Nudges: brighter darker more-bass less-bass warmer cleaner")
     sp.add_argument("--no-adapt", action="store_true",
                     help="Use the profile EQ verbatim (skip per-track adaptation).")
+    sp.add_argument("--vocal", action="store_true",
+                    help="Add vocal clarity (de-ess + presence). Clarity, not pitch.")
     add_common_out(sp)
     sp.set_defaults(func=cmd_master)
 

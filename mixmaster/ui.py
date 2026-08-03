@@ -58,7 +58,7 @@ def _report_md(a, eq_filter, reasons) -> str:
     return "\n".join(x for x in lines if x is not None)
 
 
-def run_master(audio, targets, tones, do_8d, intensity, profile_name,
+def run_master(audio, targets, tones, clearer_vocal, do_8d, intensity, profile_name,
                progress=gr.Progress()):
     if not audio:
         raise gr.Error("Add a song first — drag a WAV or MP3 into the box.")
@@ -77,6 +77,13 @@ def run_master(audio, targets, tones, do_8d, intensity, profile_name,
     else:
         p = make_plan(a, TARGETS["streaming"], base=chaos_thunder_v3(), tone=tones)
         eq_filter, reasons = p.eq_filter, p.reasons
+
+    if clearer_vocal:
+        from .presets import vocal_clarity_filter
+        vc = vocal_clarity_filter()
+        eq_filter = f"{eq_filter},{vc}" if eq_filter else vc
+        reasons.append("Vocal clarity: de-ess + upper-mid presence "
+                       "(makes the voice clearer — this is not pitch correction).")
 
     want = set(targets or ["Streaming", "Loud"])
     stream_wav = loud_wav = eightd_wav = None
@@ -178,6 +185,9 @@ def build() -> gr.Blocks:
                 profile = gr.Dropdown(profile_choices, value=AUTO,
                                       label="Vocal / mix sound",
                                       info="Use a sound you taught it, or let it decide.")
+            clearer_vocal = gr.Checkbox(
+                False, label="Clearer vocal (de-ess + presence)",
+                info="Makes the voice cut through. Clarity only — not auto-tune.")
             with gr.Accordion("Fine-tune (optional)", open=False):
                 tones = gr.CheckboxGroup(
                     ["more-bass", "less-bass", "brighter", "darker", "warmer", "cleaner"],
@@ -195,7 +205,7 @@ def build() -> gr.Blocks:
             folder = gr.Markdown()
 
             go.click(run_master,
-                     [audio, targets, tones, do_8d, intensity, profile],
+                     [audio, targets, tones, clearer_vocal, do_8d, intensity, profile],
                      [report, stream_out, loud_out, eightd_out, folder])
 
         with gr.Tab("Teach it your vocal sound"):

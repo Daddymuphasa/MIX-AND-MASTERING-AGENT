@@ -96,6 +96,20 @@ def flat() -> TonalProfile:
     return TonalProfile("flat", [EQBand("highpass", 30)])
 
 
+def vocal_clarity_filter() -> str:
+    """Make a lead vocal read clearer and more 'produced' on a finished stereo
+    mix: pull a little box out of the low-mids, add upper-mid intelligibility,
+    and tame sibilance with a gentle de-esser.
+
+    Note: this improves *clarity*, not *pitch*. Auto-tune needs the isolated
+    vocal stem — you can't pitch-correct one voice inside a stereo bounce."""
+    return (
+        "equalizer=f=450:width_type=q:width=1.2:g=-1.5,"
+        "equalizer=f=2800:width_type=q:width=1.5:g=1.8,"
+        "deesser=i=0.15"
+    )
+
+
 PROFILES = {
     "chaos-thunder-v3": chaos_thunder_v3,
     "flat": flat,
