@@ -1,0 +1,9 @@
+# The DSP engine is ffmpeg (must be on PATH). These Python deps are only used by
+# the analysis brain and the before/after 'learn' feature.
+numpy>=1.26
+scipy>=1.11
+soundfile>=0.12
+pyloudnorm>=0.1.1
+tqdm>=4.60
+# Optional: high-quality DSP building blocks, handy for future extensions.
+pedalboard>=0.9

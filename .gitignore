@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Audio working files / renders (don't commit big media)
+*.wav
+*.flac
+*.mp3
+*.aiff
+*.ogg
+!examples/**            # keep any tiny demo clips you deliberately add
+*/MixMaster*/           # generated output folders
+
+# OS
+.DS_Store
+Thumbs.db
