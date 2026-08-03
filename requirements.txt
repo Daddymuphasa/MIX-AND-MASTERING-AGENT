@@ -1,9 +1,10 @@
-# The DSP engine is ffmpeg (must be on PATH). These Python deps are only used by
-# the analysis brain and the before/after 'learn' feature.
+# The DSP engine is ffmpeg (must be on PATH). These Python deps are used by
+# the analysis brain, the before/after 'learn' feature, and the drag-drop UI.
 numpy>=1.26
 scipy>=1.11
 soundfile>=0.12
 pyloudnorm>=0.1.1
 tqdm>=4.60
+gradio>=6.0          # the drag-and-drop web UI (python -m mixmaster.ui)
 # Optional: high-quality DSP building blocks, handy for future extensions.
 pedalboard>=0.9

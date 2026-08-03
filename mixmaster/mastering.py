@@ -104,10 +104,17 @@ def _render_loud(
     gain_db = target.lufs - stats["input_i"]
     gain_db = max(-24.0, min(18.0, gain_db))  # sanity clamp
 
-    limit = _dbtp_to_linear(target.true_peak)
+    # True-peak-safe limiting: alimiter only sees sample peaks, so oversample 4x
+    # around it (inter-sample peaks become real samples), limit a hair under the
+    # ceiling to survive the downsample, then resample back.
+    sr = ff.probe(src).sample_rate or 44100
+    os_rate = sr * 4
+    limit = _dbtp_to_linear(target.true_peak - 0.3)
     chain = (
         f"{base}volume={gain_db:.2f}dB,"
-        f"alimiter=limit={limit:.4f}:attack=5:release=50:level=false:asc=1"
+        f"aresample={os_rate}:resampler=soxr,"
+        f"alimiter=limit={limit:.4f}:attack=5:release=50:level=false:asc=1,"
+        f"aresample={sr}:resampler=soxr"
     )
     args = [
         ff.ffmpeg(), "-hide_banner", "-y", "-i", src,

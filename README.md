@@ -28,6 +28,16 @@ analyze  ->  decide (agent)  ->  EQ + loudness/peak target  ->  export
 - **Export** distribution-ready files: MP3 320 kbps CBR and 24-bit FLAC, both at
   44.1 kHz (soxr resampling).
 
+## Easiest way: the app (drag & drop)
+
+Double-click **`Start MixMaster App.bat`**. Your browser opens with a simple page —
+drop a WAV/MP3 in, hit **Mix & Master**, and listen to the streaming + loud masters
+right there. There's also a tab to *teach it your vocal sound* from a before/after
+pair. Finished files are saved to `Documents\..\MixMaster Renders\<song>\`
+(WAV + MP3 320 + FLAC 24-bit). Close the black window to stop the app.
+
+Prefer the command line? Read on.
+
 ## Requirements
 
 - **ffmpeg** on your PATH (the DSP engine). Check with `ffmpeg -version`.
