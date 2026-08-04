@@ -164,6 +164,37 @@ def cmd_apply(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_vocalfx(args: argparse.Namespace) -> int:
+    from . import vocalfx
+
+    inp = args.input
+    outdir = args.out or _default_outdir(inp, "VocalFX")
+    os.makedirs(outdir, exist_ok=True)
+    stem = _stem(inp)
+
+    combined = os.path.join(outdir, f"{stem} - vocalfx (pre-master).wav")
+    print(f"Vocal production on {os.path.basename(inp)}  "
+          f"[style={args.style}, tune={args.tune}]")
+    vocalfx.produce(inp, combined, style=args.style, tune_strength=args.tune,
+                    key=args.key, vocal_gain_db=args.vocal_gain, log=print)
+
+    targets = [TARGETS[t.strip()] for t in args.targets.split(",")]
+    formats = ["mp3320", "flac24"]
+    results = []
+    for target in targets:
+        wav = os.path.join(outdir, f"{stem} - VOCALFX ({target.name}).wav")
+        print(f"Mastering {target.name} …")
+        # eq="" — the vocal chain already shaped the mix; keep the master transparent.
+        res = _mastering.render(combined, wav, "", target, bit_depth=24, verify=True)
+        results.append(res)
+        _export.export(wav, outdir, f"{stem} - vocalfx-{target.name}", formats)
+
+    print()
+    print(_report.result_report(results))
+    print(f"\nAll files in: {outdir}")
+    return 0
+
+
 def cmd_profiles(args: argparse.Namespace) -> int:
     names = _profiles.list_profiles()
     if not names:
@@ -234,6 +265,21 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--target", default="streaming", choices=list(TARGETS))
     add_common_out(sp)
     sp.set_defaults(func=cmd_apply)
+
+    sp = sub.add_parser("vocalfx",
+                        help="Separate the vocal, auto-tune it, add FX, remix + master.")
+    sp.add_argument("input")
+    sp.add_argument("--style", default="travis",
+                    choices=["travis", "clean", "wide"])
+    sp.add_argument("--tune", type=float, default=0.7,
+                    help="Auto-tune strength 0..1 (1=hard, ~0.6=mild).")
+    sp.add_argument("--key", default=None,
+                    help="Musical key letter for scale snapping, e.g. C, A (optional).")
+    sp.add_argument("--vocal-gain", type=float, default=1.0,
+                    help="Vocal level vs beat, dB (default +1).")
+    sp.add_argument("--targets", default="streaming,loud")
+    sp.add_argument("--out", help="Output directory (default: next to input).")
+    sp.set_defaults(func=cmd_vocalfx)
 
     sp = sub.add_parser("profiles", help="List learned profiles.")
     sp.set_defaults(func=cmd_profiles)

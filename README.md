@@ -110,6 +110,25 @@ Then apply it to a new take:
 The cleaner the pairing (same take, one processed), the sharper the match.
 Learned profiles are saved as readable JSON in `profiles/` — you can hand-tweak them.
 
+### Vocal FX — auto-tune + effects (Travis-style)
+
+Takes a **finished stereo song**, AI-separates the vocal, **auto-tunes** it, adds
+studio FX (de-ess, presence, doubling, delay, lush reverb), and drops it back on
+the beat — then masters it.
+
+```bash
+./.venv/Scripts/python.exe -m mixmaster vocalfx "song.wav" --style travis --tune 0.7
+```
+
+- `--style travis | wide | clean` — how heavy the FX are.
+- `--tune 0..1` — auto-tune strength (1 = hard/robotic, ~0.6 = mild/natural).
+- `--vocal-gain` — vocal level vs the beat, in dB.
+- `--key C` — snap pitch to a key's scale (optional; default chromatic).
+
+Needs the heavy extras (`demucs`, `librosa`, `psola`) and is CPU-slow — separation
+takes a few minutes per song. Because the vocal is pulled out of a 2-track mix,
+expect mild separation artifacts; the FX (reverb/doubling) help mask them.
+
 ## The proven default ("chaos-thunder-v3")
 
 The default tonal profile is the curve that was approved by ear:

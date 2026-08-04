@@ -158,6 +158,35 @@ def run_learn(before, after, name):
     return md, gr.update(choices=choices)
 
 
+def run_vocalfx(audio, style, tune, vocal_gain, progress=gr.Progress()):
+    from . import vocalfx
+
+    if not audio:
+        raise gr.Error("Add a song first — drag a WAV or MP3 into the box.")
+    stem = Path(audio).stem
+    outdir = _out_dir(f"{stem} - VocalFX")
+    combined = os.path.join(outdir, f"{stem} - vocalfx (pre-master).wav")
+
+    progress(0.05, desc="Separation can take a few minutes on CPU…")
+    vocalfx.produce(audio, combined, style=style, tune_strength=tune,
+                    vocal_gain_db=vocal_gain,
+                    log=lambda m: progress(0.4, desc=m))
+
+    progress(0.85, desc="Mastering…")
+    s = os.path.join(outdir, f"{stem} - VOCALFX (streaming).wav")
+    _mastering.render(combined, s, "", TARGETS["streaming"], verify=False)
+    _export.export(s, outdir, f"{stem} - vocalfx-streaming", ["mp3320", "flac24"])
+    l = os.path.join(outdir, f"{stem} - VOCALFX (loud).wav")
+    _mastering.render(combined, l, "", TARGETS["loud"], verify=False)
+    _export.export(l, outdir, f"{stem} - vocalfx-loud", ["mp3320", "flac24"])
+
+    progress(1.0, desc="Done")
+    md = (f"### Vocal FX — {style} ✓\n\n"
+          f"Vocal AI-separated → auto-tuned (strength {tune}) → de-ess, presence, "
+          "doubling, delay + reverb → remixed on the beat → mastered.")
+    return md, s, l, f"📁 Saved to **{outdir}**"
+
+
 CSS = """
 #title h1 {font-size: 2.1rem; margin-bottom: 0; background: linear-gradient(90deg,#a855f7,#22d3ee);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
@@ -220,6 +249,29 @@ def build() -> gr.Blocks:
             learn_btn = gr.Button("🧠  Learn this sound", variant="primary")
             learn_out = gr.Markdown()
             learn_btn.click(run_learn, [before, after, name], [learn_out, profile])
+
+        with gr.Tab("Vocal FX (auto-tune + effects)"):
+            gr.Markdown("Pulls the vocal off the beat, **auto-tunes** it, adds "
+                        "**reverb / delay / doubling / presence**, and drops it back "
+                        "on the beat. Modern trap / Travis-style. Separation takes a "
+                        "few minutes — a **WAV** gives the cleanest result.")
+            vfx_audio = gr.Audio(label="Your song (full mix)", type="filepath",
+                                 sources=["upload"])
+            with gr.Row():
+                vfx_style = gr.Radio(["travis", "wide", "clean"], value="travis",
+                                     label="FX style")
+                vfx_tune = gr.Slider(0.0, 1.0, value=0.7, step=0.05,
+                                     label="Auto-tune strength (1 = hard)")
+                vfx_gain = gr.Slider(-4.0, 5.0, value=1.0, step=0.5,
+                                     label="Vocal level vs beat (dB)")
+            vfx_go = gr.Button("🎤  Produce vocal", variant="primary", size="lg")
+            vfx_report = gr.Markdown()
+            vfx_stream = gr.Audio(label="Streaming master (−14 LUFS)")
+            vfx_loud = gr.Audio(label="Loud master (−9 LUFS)")
+            vfx_folder = gr.Markdown()
+            vfx_go.click(run_vocalfx,
+                         [vfx_audio, vfx_style, vfx_tune, vfx_gain],
+                         [vfx_report, vfx_stream, vfx_loud, vfx_folder])
 
     return demo
 

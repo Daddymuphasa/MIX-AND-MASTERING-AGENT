@@ -6,5 +6,10 @@ soundfile>=0.12
 pyloudnorm>=0.1.1
 tqdm>=4.60
 gradio>=6.0          # the drag-and-drop web UI (python -m mixmaster.ui)
-# Optional: high-quality DSP building blocks, handy for future extensions.
-pedalboard>=0.9
+pedalboard>=0.9      # studio-grade vocal FX (reverb / delay / chorus / limiter)
+
+# Vocal FX chain (separate -> auto-tune -> FX). Heavy (pulls torch); only needed
+# for the `vocalfx` command / the app's Vocal FX tab.
+demucs>=4.0          # AI vocal/instrumental separation
+librosa>=0.10        # pitch detection for auto-tune
+psola>=0.0.1         # PSOLA pitch-correction resynthesis
